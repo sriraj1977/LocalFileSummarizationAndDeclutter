@@ -1,1 +1,1 @@
-# DigitalDeclutter
+# Local File Summarization and Declutter
