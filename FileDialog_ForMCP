@@ -1,0 +1,114 @@
+import tkinter as tk
+from google.adk.agents import LlmAgent
+from google.adk.tools.function_tool import FunctionTool
+from google.adk.tools.mcp_tool.mcp_toolset import McpToolset
+from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+from mcp import StdioServerParameters
+from typing import Dict, Any
+from tkinter import filedialog
+import os
+import datetime
+
+def find_old_unaccessed_files(directory: str, days: int = 90) -> Dict[str, Any]:
+    """
+    Scans a directory recursively to find files not accessed since a specified cutoff time.
+    """
+    print(f"🔍 Scanning directory: {directory} for files not accessed in {days} days...")
+
+    if not os.path.isdir(directory):
+        print(f"❌ Directory not found: {directory}")
+        return {"status": "error", "message": f"Directory not found: {directory}"}
+
+    if days <= 0:
+        print(f"❌ Invalid days parameter: {days}")
+        return {"status": "error", "message": "Days must be a positive number."}
+
+    cutoff_time = datetime.datetime.now() - datetime.timedelta(days=days)
+    unaccessed_files = []
+    file_count = 0
+
+    print(f"📅 Cutoff time: {cutoff_time.strftime('%Y-%m-%d %H:%M:%S')}")
+
+    for dirpath, dirnames, filenames in os.walk(directory):
+        for filename in filenames:
+            file_count += 1
+            filepath = os.path.join(dirpath, filename)
+            try:
+                st = os.stat(filepath)
+                last_access = datetime.datetime.fromtimestamp(st.st_atime)
+                if last_access < cutoff_time:
+                    unaccessed_files.append({
+                        "path": filepath,
+                        "last_accessed": last_access.strftime('%Y-%m-%d %H:%M:%S')
+                    })
+            except Exception as e:
+                print(f"⚠️ Could not access {filepath}: {e}")
+
+    print(f"\n✅ Scan complete! Checked {file_count} files, found {len(unaccessed_files)} old files")
+    return {"status": "success", "unaccessed_files": unaccessed_files}
+
+def process_mcp_directory(directory: str):
+    print(f"Processing directory: {directory}")
+    result = find_old_unaccessed_files(directory, days=90)
+    if result.get("status") == "error":
+        print(f"❌ Error: {result.get('message')}")
+    else:
+        unaccessed_files = result.get("unaccessed_files", [])
+        print(f"✅ Found {len(unaccessed_files)} unaccessed files:")
+        for file_info in unaccessed_files:
+            print(f" - {file_info['path']} (Last accessed: {file_info['last_accessed']})")
+if __name__ == "__main__":
+    # Support headless mode via ADK_PERMITTED_DIRS (semicolon separated on Windows)
+    env_dirs = os.environ.get("ADK_PERMITTED_DIRS")
+    valid_directories = []
+
+    if env_dirs:
+        valid_directories = [d.strip() for d in env_dirs.split(os.pathsep) if d.strip()]
+        print(f"✅ Using permitted directories from ADK_PERMITTED_DIRS: {valid_directories}")
+    else:
+        # Interactive mode: ask user for directories
+        root = tk.Tk()
+        root.withdraw()
+        
+        try:
+            getDirectoriesNo = input("Enter number of directories to scan: ")
+            root.wm_attributes('-topmost', 1)
+            for i in range(int(getDirectoriesNo)):
+            #while True:
+                print(f"Select directory {i + 1}:")
+                #print(f"Select directory:")
+                user_directory = filedialog.askdirectory(title=f"Select directory {i + 1}")
+                #user_directory = filedialog.askdirectory(title=f"Select directory")
+                root.wm_attributes('-topmost', 0)
+                if user_directory:
+                    process_mcp_directory(user_directory)
+                    valid_directories.append(user_directory)
+                else:
+                    print("No directory selected.")
+        except ValueError:
+            print("❌ Invalid input. Using default directory.")
+            #valid_directories = [str(Path.home() / "Downloads")]
+        finally:
+            root.destroy()
+
+    # Fallback to default directory if none provided
+    #if not valid_directories:
+        #default_dir = str(Path.home() / "Downloads")
+     #   print(f"⚠️  No directories provided; using default: {default_dir}")
+        #valid_directories = [default_dir]
+
+    # Build MCP args
+    mcp_args = ["-y", "@modelcontextprotocol/server-filesystem"
+                 ] +  valid_directories
+     # Create MCP toolset
+    file_system_mcp_server = McpToolset(
+        connection_params=StdioConnectionParams(
+            server_params=StdioServerParameters(
+                command="npx",
+                args=mcp_args,
+            ),
+            timeout=30,
+        )
+    )
+
+    print(f"✅ MCP File System Tool created with {len(valid_directories)} permitted directory/directories")
