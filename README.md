@@ -81,6 +81,23 @@ An AI-powered agent that audits, summarizes, and declutters local file systems. 
 - **Safe Operations:** All destructive actions (delete/move) require explicit user approval.
 - **Extensible Tooling:** Modular agent design allows for easy extension and integration.
 - **MCP Integration:** Secure, protocol-driven file system access.
+  
+## Approaches Chosen & Justification
+
+### Multi-Agent System (Sequential Agents)
+We use a modular, multi-agent architecture with clear separation of concerns. The `Declutter_Pipeline` is a sequential agent that first scans for old files and then requests user approval before deletion, ensuring safety and auditability.
+
+### Agent Powered by an LLM
+All core agents are powered by Gemini LLMs, enabling natural language understanding, intelligent file analysis, and safe, conversational user interaction. This allows the system to interpret complex user requests and provide context-aware recommendations.
+
+### Tools: MCP & Custom Tools
+We leverage the Model Context Protocol (MCP) for secure, protocol-based file system access, ensuring cross-platform compatibility and safety. Custom Python functions are wrapped as tools for file operations, making the system both powerful and extensible.
+
+### Sessions & State Management
+Session and state management are handled via `InMemorySessionService`, ensuring continuity and context across user interactions. This allows the agent to remember user actions and maintain context throughout a session.
+
+### Effective Use of Gemini
+Gemini models are central to our solution, providing advanced reasoning, summarization, and safe, user-friendly interaction throughout the agent pipeline. All decision-making, user prompts, and file recommendations are powered by Gemini's LLM capabilities.
 
 ## Technical Implementation
 
