@@ -112,6 +112,13 @@ Gemini models are central to our solution, providing advanced reasoning, summari
 - **Gemini Models:** All agent reasoning and user interaction is powered by Gemini (e.g., gemini-2.5-flash-lite).
 - **Environment Variables:** `PERMITTED_DIRS` restricts file system access for safety.
 
+<img width="1512" height="982" alt="Screenshot 2025-11-30 at 17 47 16" src="https://github.com/user-attachments/assets/f067f3a7-f4a1-4db3-ad79-4a8abca8ca87" />
+<img width="1512" height="982" alt="Screenshot 2025-11-30 at 17 43 39" src="https://github.com/user-attachments/assets/031ab6e3-fbcf-4ffc-abe5-d7868485974e" />
+<img width="1512" height="982" alt="Screenshot 2025-11-30 at 17 41 52" src="https://github.com/user-attachments/assets/c941d091-d2ca-4a7a-af0f-81ce564be2b4" />
+<img width="1512" height="982" alt="Screenshot 2025-11-30 at 17 41 11" src="https://github.com/user-attachments/assets/30cebe70-109f-4002-9b66-69a5ebb72266" />
+<img width="1512" height="982" alt="Screenshot 2025-11-30 at 17 34 22" src="https://github.com/user-attachments/assets/333c25e8-ae4f-40e2-8b52-0a3d60713348" />
+
+
 ### Effective Use of Gemini
 - Gemini models are used for:
 	- Natural language understanding of user requests
