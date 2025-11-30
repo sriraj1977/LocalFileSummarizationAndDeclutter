@@ -7,15 +7,28 @@ from google.adk.agents import Agent, LlmAgent, SequentialAgent
 from google.adk.runners import Runner
 from google.adk.apps.app import App
 from google.genai import types
-from google.adk.tools import FunctionTool
+from google.adk.tools.function_tool import FunctionTool
+import os
+from google.adk.tools import load_memory, preload_memory
 from google.adk.models.google_llm import Gemini
 from google.adk.memory import InMemoryMemoryService
 from google.adk.sessions import InMemorySessionService, DatabaseSessionService
 from google.adk.tools import load_memory, preload_memory
+from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+from mcp import StdioServerParameters
+from google.adk.tools.mcp_tool.mcp_toolset import McpToolset
 
 APP_NAME = "declutter_agent"
 USER_ID = "user"
 SESSION = "default"
+
+# Read permitted directories from environment variable
+permitted_dirs_env = os.environ.get("PERMITTED_DIRS", "")
+if permitted_dirs_env:
+    valid_directories = [d.strip() for d in permitted_dirs_env.split(":") if d.strip()]
+else:
+    valid_directories = []
+
 
 MODEL_NAME = "gemini-2.5-flash-lite"
 
@@ -240,6 +253,19 @@ Created: {create_time}
     except Exception as e:
         return f"Error getting file info: {e}"
 
+mcp_args = ["-y", "@modelcontextprotocol/server-filesystem"] + valid_directories
+
+# Create MCP toolset
+file_system_mcp_server = McpToolset(
+    connection_params=StdioConnectionParams(
+        server_params=StdioServerParameters(
+            command="npx",
+            args=mcp_args,
+        ),
+        timeout=30,
+    )
+)
+
 file_info_tool = FunctionTool(get_file_info)
     
 # -------------------------------------------------------------
@@ -258,7 +284,7 @@ Listing_Agent = Agent(
        (Do NOT ask the user yourself. Stay silent.)
     3. If a path IS provided, use 'list_old_files' to scan it.
     4. Output the result as a clear, numbered list.""",
-    tools=[old_files_tool],
+    tools=[file_system_mcp_server, old_files_tool],
     output_key="found_files_list"
 )
 
